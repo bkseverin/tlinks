@@ -15,59 +15,22 @@
 --->
 
 <cfinvoke method="readCourses" component="tlinksapi" returnvariable="golfCourses">
-
-<cfoutput>
-	<cfloop query="golfCourses">
-		Current Row: #golfCourses.currentrow# Course Code: #golfCourses.coursecode#<br>
-		<!---<cfinvoke method="getCourseRates" component="tlinksapi" returnvariable="courseRates">
-<cfinvokeargument name="distributorid"  value="#distributorid#" >
-<cfinvokeargument name="regionID"  value="#regionid#" >
-<cfinvokeargument name="locationcode" value="#locationcode#" >
-<cfinvokeargument name="userid" value="#UserID#" >
-<cfinvokeargument name="userpwd" value="#userpwd#" >
-<cfinvokeargument name="transid" value="#transid#">
-<cfinvokeargument name="CourseCode" value="#golfcourses.coursecode#" >	
-
-</cfinvoke>--->
-<cfinvoke method="getCourseInformation" component="tlinksapi" returnvariable="CourseInfo">
-<cfinvokeargument name="distributorid"  value="#distributorid#" >
-<cfinvokeargument name="regionID"  value="#regionid#" >
-<cfinvokeargument name="locationcode" value="#locationcode#" >
-<cfinvokeargument name="userid" value="#UserID#" >
-<cfinvokeargument name="userpwd" value="#userpwd#" >
-<cfinvokeargument name="transid" value="#transid#">
-<cfinvokeargument name="CourseCode" value="#golfcourses.coursecode#" >	
+<!---<cfdump var="#golfCourses#" >--->
+<cfloop query="golfcourses">
+	<cfinvoke method="getCourseRates" component="tlinksapi" returnvariable="courseRates">
+	<cfinvokeargument name="RegionID" value="#regionid#" >
+	<cfinvokeargument name="DistributorID" value="#DistributorID#">
+	<cfinvokeargument name="LocationCode" value="#locationcode#" >
+	<cfinvokeargument name="UserID" value="#userid#" >
+	<cfinvokeargument name="UserPwd" value="#userpwd#" >
+	<cfinvokeargument name="TransID" value="#transid#" >
+	<cfinvokeargument name="CourseCode" value="#coursecode#" >
+	
 </cfinvoke>
-<cfdump var="#courseinfo#" >
-	</cfloop>
-</cfoutput>
-<!---<cfinvoke method="getCourseList" component="tlinksapi" returnvariable="CourseList">
-<cfinvokeargument name="distributorid"  value="#distributorid#" >
-<cfinvokeargument name="regionID"  value="#regionid#" >
-<cfinvokeargument name="locationcode" value="#locationcode#" >
-<cfinvokeargument name="userid" value="#UserID#" >
-<cfinvokeargument name="userpwd" value="#userpwd#" >
-<cfinvokeargument name="transid" value="#transid#">
-</cfinvoke>--->
-<!---<cfinvoke method="getCourseInformation" component="tlinksapi" returnvariable="CourseInfo">
-<cfinvokeargument name="distributorid"  value="#distributorid#" >
-<cfinvokeargument name="regionID"  value="#regionid#" >
-<cfinvokeargument name="locationcode" value="#locationcode#" >
-<cfinvokeargument name="userid" value="#UserID#" >
-<cfinvokeargument name="userpwd" value="#userpwd#" >
-<cfinvokeargument name="transid" value="#transid#">
-<cfinvokeargument name="CourseCode" value="POTR" >	
-</cfinvoke>--->
-<!---<cfinvoke method="getCourseRates" component="tlinksapi" returnvariable="courseRates">
-<cfinvokeargument name="distributorid"  value="#distributorid#" >
-<cfinvokeargument name="regionID"  value="#regionid#" >
-<cfinvokeargument name="locationcode" value="#locationcode#" >
-<cfinvokeargument name="userid" value="#UserID#" >
-<cfinvokeargument name="userpwd" value="#userpwd#" >
-<cfinvokeargument name="transid" value="#transid#">
-<cfinvokeargument name="CourseCode" value="POTR" >	
-</cfinvoke>--->
-<!---<cfdump var="#courselist#" >--->
+
+<cfdump var="#courseRates#" >
+</cfloop>
+
 <cfcatch type="any" >
 	<cfdump var="#cfcatch#" >
 </cfcatch>

@@ -73,6 +73,7 @@
 	<cfargument name="UserPwd" required="true" >
 	<cfargument name="TransID" required="true" >
 	<cfargument name="CourseCode" required="true" >
+	<cfargument name="RateID" required="true" >
 	<cfargument name="playdate" required="false" default="#now()#" >
 	<cfinvoke method="createRequestHeader" returnvariable="requestHeader" >
 	<cfinvokeargument name="RegionID" value="#arguments.regionID#" >
@@ -169,6 +170,7 @@
 	<cfargument name="CourseCode" required="true" >
 	<cfargument name="rateStartDate" required="false" default="#now()#" >
 	<cfargument name="RateEndDate" required="true" default="#dateadd('d',1,now())#" >
+	
 	<cfinvoke method="createRequestHeader" returnvariable="requestHeader" >
 	<cfinvokeargument name="RegionID" value="#arguments.regionID#" >
 	<cfinvokeargument name="DistributorID" value="#arguments.DistributorID#" >
@@ -177,6 +179,14 @@
 	<cfinvokeargument name="UserPwd"  value="#arguments.UserPwd#" >
 	<cfinvokeargument name="TransID"  value="#arguments.TransID#" >
 </cfinvoke>
+<!---<CourseCode>CRST</CourseCode>
+<RateStartDate>11/01/2009</RateStartDate>
+<RateEndDate>11/30/2009</RateEndDate>
+<RateID>4562</RateID>
+<CourseCode>SICR</CourseCode>
+<RateStartDate>11/01/2009</RateStartDate>
+<RateEndDate>11/30/2009</RateEndDate>
+<RateID>4583</RateID>--->
 <cfset startDate = dateformat(arguments.rateStartdate,'mm/dd/yyyy')>
 <cfset endDate = dateformat(arguments.rateEndDate,'mm/dd/yyyy')>
 <cfoutput >
@@ -187,39 +197,12 @@
 </cfinvoke>
 <cfif apiResponse.statuscode eq "200 OK" and apiresponse.errordetail eq ''>
 	<cfset ratesdoc = xmlparse(apiresponse.filecontent)>
-	<!---<cfset var courseinfo = xmlsearch(ratesdoc,"//*[local-name()='Course']")>--->
-	<cfset ratesarray = xmlsearch(ratesdoc,"//*[local-name()='Rates']")>
-	<!---<cfset coursecode = courseinfo[1].CourseCode.XmlText>--->
-	<cfloop from="1" to="#arraylen(ratesarray)#" index="i">
-		<cfquery datasource="#dsn#">
-			replace into bsev_golf_course_rates (CourseCode,RateName,RateID,DaysInAdvance,StartDate,EndDate,StartTime,EndTime,GreensFee,CartFee,Markup,CartIncluded,AllowMon,AllowTue,AllowWed,AllowThu,AllowFri,AllowSat,AllowSun,PlayerType)
-			values (
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.courseCode#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].RateName.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].RateID.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].DaysInAdvance.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_date" value="#createodbcdate(ratesarray[i].StartDate.xmltext)#">,
-				<cfqueryparam cfsqltype="cf_sql_date" value="#createodbcdate(ratesarray[i].EndDate.xmltext)#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].StartTime.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].EndTime.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_decimal" value="#ratesarray[i].GreensFee.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_decimal" value="#ratesarray[i].CartFee.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_decimal" value="#ratesarray[i].Markup.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].CartIncluded.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].AllowMon.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].AllowTue.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].AllowWed.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].AllowThu.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].AllowFri.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].AllowSat.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].AllowSun.xmltext#">,
-				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].PlayerType.xmltext#"> 
-				
-			)
-		</cfquery>
-	</cfloop>
+	<cfset ratesarray =  xmlSearch(ratesdoc,"//*[local-name()='Rates']")>
+
+	<cfelse>
+	<cfset ratesdoc = apiresponse>
 </cfif>
-<cfreturn ratesarray>
+<cfreturn ratesdoc>
 </cffunction>
 
 <cffunction name="httpRequest" access="private" returntype="struct" >
@@ -232,7 +215,8 @@
 </cffunction>
 <cffunction name="readCourses" access="public" returntype="query" >
 	<cfquery name="qReadCourses" datasource="#dsn#">
-		select courseid, coursecode, coursename from bsev_golf_courses order by coursename
+		select courseid, coursecode, coursename, singleroundRateCode, 48hourRateCode from bsev_golf_courses 
+		where singleroundRateCode <> '' or 48hourratecode <> '' order by coursename
 	</cfquery>
 	<cfreturn qReadCourses>
 </cffunction>

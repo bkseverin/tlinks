@@ -170,6 +170,8 @@
 	<cfargument name="CourseCode" required="true" >
 	<cfargument name="rateStartDate" required="false" default="#now()#" >
 	<cfargument name="RateEndDate" required="true" default="#dateadd('d',1,now())#" >
+	<cfargument name="standardratename" required="true" >
+	<cfargument name="fortyeight" required="true" > 
 	
 	<cfinvoke method="createRequestHeader" returnvariable="requestHeader" >
 	<cfinvokeargument name="RegionID" value="#arguments.regionID#" >
@@ -198,11 +200,49 @@
 <cfif apiResponse.statuscode eq "200 OK" and apiresponse.errordetail eq ''>
 	<cfset ratesdoc = xmlparse(apiresponse.filecontent)>
 	<cfset ratesarray =  xmlSearch(ratesdoc,"//*[local-name()='Rates']")>
-
+	<!--- delete the rates with the course id --->
+		<cfquery datasource="#dsn#">
+			delete from bsev_golf_course_rates
+			where coursecode = '#arguments.courseCode#'
+		</cfquery>	
+	<cfloop from="1" to="#arraylen(ratesarray)#" index="i">
+		
+		<cfif ratesarray[i].ratename.xmltext eq arguments.standardratename or ratesarray[i].ratename.xmltext eq arguments.fortyeight>
+			<cfset starttime = convertTime(ratesarray[i].starttime.xmltext)>
+			<cfset endtime = convertTime(ratesarray[i].endtime.xmltext)>
+		<cfquery datasource="#dsn#">
+			insert into bsev_golf_course_rates (coursecode,ratename,rateid,daysinadvance,startdate,enddate,starttime,endtime,greensfee,cartfee,markup,cartincluded,allowmon,allowtue,allowwed,allowthu,allowfri,allowsat,allowsun,playertype)
+			values (
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#arguments.courseCode#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].ratename.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].rateid.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].daysinadvance.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_date" value="#createodbcdate(ratesarray[i].startdate.xmltext)#">,
+				<cfqueryparam cfsqltype="cf_sql_date" value="#createodbcdate(ratesarray[i].enddate.xmltext)#">,
+				#createodbctime(starttime)#,
+				#createodbctime(endtime)#,
+				
+				<cfqueryparam cfsqltype="cf_sql_decimal" value="#ratesarray[i].greensfee.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_decimal" value="#ratesarray[i].cartfee.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_decimal" value="#ratesarray[i].markup.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].cartincluded.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].allowmon.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].allowtue.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].allowwed.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].allowthu.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].allowfri.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].allowsat.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].allowsun.xmltext#">,
+				<cfqueryparam cfsqltype="cf_sql_varchar" value="#ratesarray[i].playertype.xmltext#">   
+			)
+		</cfquery>
+		
+		</cfif>
+	</cfloop>
 	<cfelse>
-	<cfset ratesdoc = apiresponse>
+	<cfset ratesarray = apiresponse>
 </cfif>
-<cfreturn ratesdoc>
+<cfreturn ratesarray>
 </cffunction>
 
 <cffunction name="httpRequest" access="private" returntype="struct" >
@@ -220,5 +260,28 @@
 	</cfquery>
 	<cfreturn qReadCourses>
 </cffunction>
-
+<cffunction name="readRates" access="public" returntype="query" >
+	<cfargument name="coursecode" required="true" >
+	<cfquery name="qrates" datasource="#dsn#">
+	select bsev_golf_course_rates.CourseCode,bsev_golf_course_rates.RateName,bsev_golf_course_rates.RateID,bsev_golf_course_rates.DaysInAdvance,bsev_golf_course_rates.StartDate,bsev_golf_course_rates.EndDate,bsev_golf_course_rates.StartTime,bsev_golf_course_rates.EndTime,bsev_golf_course_rates.GreensFee,bsev_golf_course_rates.CartFee,bsev_golf_course_rates.Markup,bsev_golf_course_rates.CartIncluded,bsev_golf_course_rates.AllowMon,bsev_golf_course_rates.AllowTue,bsev_golf_course_rates.AllowWed,bsev_golf_course_rates.AllowThu,bsev_golf_course_rates.AllowFri,bsev_golf_course_rates.AllowSat,bsev_golf_course_rates.AllowSun,bsev_golf_course_rates.PlayerType, bsev_golf_courses.coursename
+from	bsev_golf_course_rates
+inner join bsev_golf_courses ON bsev_golf_course_rates.CourseCode = bsev_golf_courses.courseCode where bsev_golf_course_rates.CourseCode = '#arguments.coursecode#'
+	order by StartDate, StartTime
+	
+	</cfquery>
+	<cfreturn qrates>	
+	
+	
+	
+	
+</cffunction>
+<cffunction name="convertTime" access="private" returntype="String" >
+	<cfargument name="timeString" required="true" >
+	<cfif len(timestring) eq 3>
+		<cfset thetime = createtime(left(arguments.timeString,1),right(arguments.timeString,2),0)>
+	<cfelseif len(timestring) eq 4>
+		<cfset thetime = createtime(left(arguments.timeString,2),right(arguments.timeString,2),0)>
+	</cfif>
+	<cfreturn thetime>
+</cffunction>
 </cfcomponent>

@@ -25,10 +25,12 @@
 	<cfinvokeargument name="UserPwd" value="#userpwd#" >
 	<cfinvokeargument name="TransID" value="#transid#" >
 	<cfinvokeargument name="CourseCode" value="#coursecode#" >
+	<cfinvokeargument name="standardratename" value="#singleroundratecode#" >
+	<cfinvokeargument name="fortyeight" value="#golfcourses.48hourratecode#" >
 	
 </cfinvoke>
 
-<cfdump var="#courseRates#" >
+<!---<cfdump var="#courseRates#" >--->
 </cfloop>
 
 <cfcatch type="any" >
